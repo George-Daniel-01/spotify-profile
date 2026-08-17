@@ -1,0 +1,9 @@
+{
+  "installCommand": "echo skipping root install",
+  "buildCommand": "cd client && yarn install && yarn build",
+  "outputDirectory": "client/build",
+  "framework": null,
+  "rewrites": [
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
+}

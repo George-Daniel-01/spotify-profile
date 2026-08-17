@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/((?!static/|favicons/|fonts/|og.png|manifest.json|browserconfig.xml).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
