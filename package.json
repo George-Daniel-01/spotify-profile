@@ -26,7 +26,8 @@
     "heroku-postbuild": "cd client/ && yarn && yarn install --production && yarn build",
     "test:api": "node tests/api-smoke.js",
     "test:e2e": "node tests/e2e-local.js",
-    "test": "npm run test:api && npm run test:e2e"
+    "test:postlogin": "node tests/e2e-postlogin.js",
+    "test": "npm run test:api && npm run test:e2e && npm run test:postlogin"
   },
   "lint-staged": {
     "*.{js,css,json,md}": [
