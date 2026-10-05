@@ -15,7 +15,7 @@
     "node": "24.x"
   },
   "babelMacros": {},
-  "homepage": ".",
+  "homepage": "/",
   "proxy": "http://localhost:8888",
   "scripts": {
     "start": "react-scripts start",
@@ -37,7 +37,6 @@
     }
   },
   "dependencies": {
-    "@clerk/clerk-react": "^4.30.0",
     "@stripe/stripe-js": "^9.10.0",
     "axios": "^0.21.1",
     "babel-plugin-macros": "^2.6.1",

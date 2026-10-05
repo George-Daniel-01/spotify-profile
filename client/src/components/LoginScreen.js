@@ -1,5 +1,4 @@
 import React from 'react';
-import { SignInButton } from '@clerk/clerk-react';
 import styled, { keyframes } from 'styled-components';
 import { theme, mixins, media, Main } from '../styles';
 const { colors, fontSizes } = theme;
@@ -49,32 +48,6 @@ const Subtitle = styled.p`
   margin: 0 0 40px;
   animation: ${fadeIn} 0.6s ease 0.2s forwards;
   opacity: 0;
-`;
-const ClerkArea = styled.div`
-  margin-top: 15px;
-  animation: ${fadeIn} 0.6s ease 0.4s forwards;
-  opacity: 0;
-`;
-const ClerkButton = styled.span`
-  display: inline-block;
-  background-color: transparent;
-  color: ${colors.green};
-  border: 2px solid ${colors.green};
-  border-radius: 50px;
-  padding: 16px 48px;
-  font-weight: 700;
-  font-size: ${fontSizes.base};
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  &:hover,
-  &:focus {
-    background-color: ${colors.green};
-    color: ${colors.white};
-    transform: scale(1.05);
-  }
 `;
 const LoginButton = styled.a`
   display: inline-block;
@@ -133,13 +106,6 @@ const LoginScreen = () => (
     <Title>Spotify Profile</Title>
     <Subtitle>Visualize your listening habits and discover your music personality</Subtitle>
     <LoginButton href={LOGIN_URI}>Log in to Spotify</LoginButton>
-    {process.env.REACT_APP_CLERK_PUBLISHABLE_KEY && (
-      <ClerkArea>
-        <SignInButton mode="modal">
-          <ClerkButton>Continue with Clerk</ClerkButton>
-        </SignInButton>
-      </ClerkArea>
-    )}
     <Features>
       <Feature>
         <FeatureTitle>Your Music DNA</FeatureTitle>
