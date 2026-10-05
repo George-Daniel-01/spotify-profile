@@ -40,22 +40,37 @@ const App = () => {
     });
   }, []);
 
-  useEffect(() => {
-    if (spotifyUser && spotifyUser.id) {
-      const checkSubscription = async () => {
-        try {
-          const response = await fetch(
-            `/api/subscription-status?spotify_user_id=${spotifyUser.id}`,
-          );
-          const data = await response.json();
-          setIsSubscribed(data && data.active);
-        } catch (err) {
-          console.error('Error checking subscription:', err);
-        }
-      };
-      checkSubscription();
+  const checkSubscription = useCallback(async () => {
+    if (!spotifyUser || !spotifyUser.id) return;
+    try {
+      const response = await fetch(`/api/subscription-status?spotify_user_id=${spotifyUser.id}`);
+      const data = await response.json();
+      setIsSubscribed(!!(data && (data.active || data.subscribed)));
+    } catch (err) {
+      console.error('Error checking subscription:', err);
     }
   }, [spotifyUser]);
+
+  useEffect(() => {
+    checkSubscription();
+  }, [checkSubscription]);
+
+  // Stripe returns here after checkout; the webhook may not have landed yet, so
+  // poll briefly instead of leaving the paywall up.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('checkout');
+    if (!status) return;
+
+    window.history.replaceState({}, '', window.location.pathname);
+    if (status !== 'success') return;
+
+    const attempts = [0, 1500, 4000, 8000];
+    const timers = attempts.map(delay =>
+      setTimeout(() => checkSubscription(), delay)
+    );
+    return () => timers.forEach(clearTimeout);
+  }, [checkSubscription]);
 
   useEffect(() => {
     const fetchProducts = async () => {

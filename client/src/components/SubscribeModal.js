@@ -50,6 +50,11 @@ const Description = styled.p`
   font-size: ${fontSizes.sm};
   margin: 0 0 30px;
 `;
+const ErrorText = styled.p`
+  color: ${colors.red};
+  font-size: ${fontSizes.sm};
+  margin: 0 0 15px;
+`;
 const SubscribeButton = styled.button`
   ${mixins.greenButton};
   width: 100%;
@@ -72,37 +77,48 @@ const CancelLink = styled.button`
 
 const SubscribeModal = ({ isOpen, onClose, products, spotifyUser }) => {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const formatPrice = price => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: price.currency,
-      minimumFractionDigits: 0,
-    }).format((price.unit_amount || 0) / 100);
+    try {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: (price.currency || 'usd').toUpperCase(),
+        minimumFractionDigits: 0,
+      }).format((price.unit_amount || 0) / 100);
+    } catch (e) {
+      return `$${((price.unit_amount || 0) / 100).toFixed(0)}`;
+    }
   };
 
   const handleCheckout = async price => {
     setLoading(true);
+    setError('');
     try {
-      const response = await fetch('/create-checkout-session', {
+      // Only the price ID is sent; the server re-reads the amount so a tampered
+      // client cannot choose what it pays.
+      const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          price,
-          spotify_user_id: spotifyUser?.id,
-          spotify_user_email: spotifyUser?.email,
+          priceId: price.id,
+          spotify_user_id: spotifyUser && spotifyUser.id,
+          spotify_user_email: spotifyUser && spotifyUser.email,
         }),
       });
-      const { sessionId } = await response.json();
 
-      const stripeModule = await import('@stripe/stripe-js');
-      const stripe = await stripeModule.loadStripe(
-        process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || '',
-      );
-      await stripe.redirectToCheckout({ sessionId });
-    } catch (error) {
-      console.error('Checkout error:', error);
-    } finally {
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error((data && data.error) || 'Could not start checkout');
+      }
+      if (!data || !data.url) {
+        throw new Error('Checkout session did not return a URL');
+      }
+
+      // Stripe.js v9 removed redirectToCheckout: navigate to the hosted page.
+      window.location.assign(data.url);
+    } catch (err) {
+      setError(err.message || 'Something went wrong starting checkout');
       setLoading(false);
     }
   };
@@ -110,9 +126,12 @@ const SubscribeModal = ({ isOpen, onClose, products, spotifyUser }) => {
   return (
     <Overlay isOpen={isOpen} onClick={onClose}>
       <Modal isOpen={isOpen} onClick={e => e.stopPropagation()}>
-        <CloseButton onClick={onClose}>&times;</CloseButton>
+        <CloseButton onClick={onClose} aria-label="Close">
+          &times;
+        </CloseButton>
         <Title>Premium Required</Title>
         <Description>Subscribe to access track details and artist insights</Description>
+        {error && <ErrorText role="alert">{error}</ErrorText>}
         {products && products.length > 0 ? (
           products.map(product =>
             product.prices && product.prices.length > 0

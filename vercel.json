@@ -1,6 +1,6 @@
 {
-  "installCommand": "echo skipping root install",
-  "buildCommand": "cd client && yarn install && yarn build",
+  "installCommand": "npm install --omit=dev --no-audit --no-fund && cd client && yarn install --frozen-lockfile",
+  "buildCommand": "cd client && yarn build",
   "outputDirectory": "client/build",
   "framework": null,
   "rewrites": [
