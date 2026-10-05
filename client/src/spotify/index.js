@@ -175,6 +175,22 @@ export const getTopTracksLong = () =>
 export const getArtist = artistId =>
   axios.get(`https://api.spotify.com/v1/artists/${artistId}`, { headers: getHeaders() });
 
+// Spotify accepts up to 50 ids per call, so fetch genres in batches instead of
+// one request per artist (which easily blew past rate limits on large accounts).
+export const getArtists = artistIds => {
+  const ids = artistIds.filter(Boolean);
+  if (!ids.length) return Promise.resolve({ data: { artists: [] } });
+  const chunks = [];
+  for (let i = 0; i < ids.length; i += 50) chunks.push(ids.slice(i, i + 50));
+  return Promise.all(
+    chunks.map(chunk =>
+      axios
+        .get(`https://api.spotify.com/v1/artists?ids=${chunk.join(',')}`, { headers: getHeaders() })
+        .then(({ data }) => data.artists || [])
+    )
+  ).then(arrays => ({ data: { artists: arrays.flat().filter(Boolean) } }));
+};
+
 export const followArtist = artistId => {
   const url = `https://api.spotify.com/v1/me/following?type=artist&ids=${artistId}`;
   return axios({ method: 'put', url, headers: getHeaders() });

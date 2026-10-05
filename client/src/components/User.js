@@ -243,12 +243,16 @@ const User = ({ setSpotifyUser }) => {
                 </NoAvatar>
               )}
             </Avatar>
-            <UserName href={user.external_urls.spotify} target="_blank" rel="noopener noreferrer">
+            {user.external_urls && user.external_urls.spotify ? (
+              <UserName href={user.external_urls.spotify} target="_blank" rel="noopener noreferrer">
+                <Name>{user.display_name}</Name>
+              </UserName>
+            ) : (
               <Name>{user.display_name}</Name>
-            </UserName>
+            )}
             <Stats>
               <Stat>
-                <Number>{user.followers.total}</Number>
+                <Number>{((user.followers || {}).total || 0).toLocaleString()}</Number>
                 <NumLabel>Followers</NumLabel>
               </Stat>
               {followedArtists && (

@@ -1,5 +1,7 @@
 node_modules
 
+tests/audit-output/
+
 .DS_Store
 
 .env

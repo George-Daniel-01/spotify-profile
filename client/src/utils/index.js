@@ -24,8 +24,12 @@ export const formatDurationForHumans = millis => {
   return `${minutes} Mins ${seconds} Secs`;
 };
 
-// Get year from YYYY-MM-DD
-export const getYear = date => date.split('-')[0];
+// Get year from YYYY-MM-DD. Spotify omits release_date for some items,
+// so never assume the caller got a usable string.
+export const getYear = date => {
+  if (typeof date !== 'string') return '';
+  return date.split('-')[0];
+};
 
 // Transform Pitch Class Notation to string
 export const parsePitchClass = note => {

@@ -141,7 +141,7 @@ const Playlist = props => {
         <Main>
           <PlaylistContainer>
             <Left>
-              {playlist.images.length && (
+              {playlist.images && playlist.images.length > 0 && (
                 <PlaylistCover>
                   <img
                     src={
@@ -152,17 +152,24 @@ const Playlist = props => {
                 </PlaylistCover>
               )}
 
-              <a href={playlist.external_urls.spotify} target="_blank" rel="noopener noreferrer">
+              {playlist.external_urls && playlist.external_urls.spotify ? (
+                <a
+                  href={playlist.external_urls.spotify}
+                  target="_blank"
+                  rel="noopener noreferrer">
+                  <Name>{playlist.name}</Name>
+                </a>
+              ) : (
                 <Name>{playlist.name}</Name>
-              </a>
+              )}
 
-              <Owner>By {playlist.owner.display_name}</Owner>
+              <Owner>By {(playlist.owner || {}).display_name}</Owner>
 
               {playlist.description && (
                 <Description dangerouslySetInnerHTML={{ __html: playlist.description }} />
               )}
 
-              <TotalTracks>{playlist.tracks.total} Tracks</TotalTracks>
+              <TotalTracks>{((playlist.tracks || {}).total || 0)} Tracks</TotalTracks>
 
               <RecButton to={`/recommendations/${playlist.id}`}>Get Recommendations</RecButton>
 
@@ -172,8 +179,13 @@ const Playlist = props => {
             </Left>
             <Right>
               <ul>
-                {playlist.tracks &&
-                  playlist.tracks.items.map(({ track }, i) => <TrackItem track={track} key={i} />)}
+                {(playlist.tracks &&
+                playlist.tracks.items &&
+                playlist.tracks.items
+                  .filter(({ track }) => track)
+                  .map(({ track }, i) => <TrackItem track={track} key={i} />)) || (
+                <ErrorText>This playlist has no playable tracks.</ErrorText>
+              )}
               </ul>
             </Right>
           </PlaylistContainer>

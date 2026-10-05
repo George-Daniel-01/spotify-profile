@@ -3,7 +3,7 @@ import {
   getTopTracksLong,
   getTopTracksMedium,
   getTopTracksShort,
-  getArtist,
+  getArtists,
   getUser,
   createPlaylist,
   addTracksToPlaylist,
@@ -262,18 +262,16 @@ const MoodMatch = () => {
         const unique = Array.from(allMap.values());
         setTracks(unique);
 
-        const artistIds = [...new Set(unique.flatMap(t => t.artists.map(a => a.id)))];
-        const artistResults = await Promise.all(
-          artistIds.map(id => getArtist(id).catch(() => null))
-        );
+        const artistIds = [...new Set(unique.flatMap(t => (t.artists || []).map(a => a.id)))];
+        const { data: artistBatch } = await getArtists(artistIds);
         const artistGenres = {};
-        artistResults.forEach(a => {
-          if (a && a.data) artistGenres[a.data.id] = a.data.genres || [];
+        artistBatch.forEach(a => {
+          if (a && a.id) artistGenres[a.id] = a.genres || [];
         });
 
         const fMap = {};
         unique.forEach(t => {
-          const allGenres = t.artists.flatMap(a => artistGenres[a.id] || []);
+          const allGenres = (t.artists || []).flatMap(a => artistGenres[a.id] || []);
           const features = matchGenre(allGenres);
           fMap[t.id] = adjustByPopularity(features, t.popularity || 50);
         });

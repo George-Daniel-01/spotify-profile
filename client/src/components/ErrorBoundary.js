@@ -1,50 +1,67 @@
 import React from 'react';
+import PropTypes from 'prop-types';
+import styled from 'styled-components';
+import { theme, mixins, Main } from '../styles';
 
-let _errKey = 0;
+const { colors, spacing, fontSizes } = theme;
+
+const Fallback = styled(Main)`
+  ${mixins.flexCenter};
+  flex-direction: column;
+  text-align: center;
+  padding: 80px 20px;
+`;
+const Title = styled.h2`
+  font-size: ${fontSizes.xxl};
+  margin: 0 0 ${spacing.sm};
+`;
+const Text = styled.p`
+  color: ${colors.lightGrey};
+  font-size: ${fontSizes.md};
+  margin: 0 0 ${spacing.lg};
+`;
+const RetryButton = styled.button`
+  ${mixins.greenButton};
+  font-size: ${fontSizes.base};
+`;
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, mountKey: 0, lastPath: '' };
-    this.recoverTimer = null;
-    this.recoverAttempts = 0;
+    this.state = { error: null };
+    this.handleRetry = this.handleRetry.bind(this);
   }
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error) {
+    return { error };
   }
 
   componentDidCatch(error, errorInfo) {
     console.error('ErrorBoundary caught:', error, errorInfo);
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    const path = window.location.pathname;
-    if (this.state.hasError && !prevState.hasError) {
-      this.recoverAttempts++;
-      if (this.recoverAttempts <= 3) {
-        this.recoverTimer = setTimeout(() => {
-          _errKey++;
-          this.setState({ hasError: false, mountKey: _errKey, lastPath: path });
-        }, 500);
-      }
-    }
-    if (!this.state.hasError && path !== this.state.lastPath) {
-      this.recoverAttempts = 0;
-      this.setState({ lastPath: path });
-    }
-  }
-
-  componentWillUnmount() {
-    if (this.recoverTimer) clearTimeout(this.recoverTimer);
+  handleRetry() {
+    this.setState({ error: null });
   }
 
   render() {
-    if (this.state.hasError) {
-      return null;
+    if (this.state.error) {
+      return (
+        <Fallback role="alert">
+          <Title>Something went wrong.</Title>
+          <Text>We couldn't display this page. Please try again.</Text>
+          <RetryButton type="button" onClick={this.handleRetry}>
+            Try again
+          </RetryButton>
+        </Fallback>
+      );
     }
-    return <div key={this.state.mountKey}>{this.props.children}</div>;
+    return this.props.children;
   }
 }
+
+ErrorBoundary.propTypes = {
+  children: PropTypes.node,
+};
 
 export default ErrorBoundary;
