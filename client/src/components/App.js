@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getAccessToken } from '../spotify';
+import { getAccessToken, getUser } from '../spotify';
 
 import ErrorBoundary from './ErrorBoundary';
 import LoginScreen from './LoginScreen';
@@ -40,7 +40,24 @@ const App = () => {
     });
   }, []);
 
-  const checkSubscription = useCallback(async () => {
+  // The profile route is the only place User.js resolves the Spotify user, so a
+// deep link to /track/:id or /artist/:id would never learn who the user is and
+// would always show the paywall. Resolve it here instead.
+useEffect(() => {
+    if (!accessToken || spotifyUser) return undefined;
+    let cancelled = false;
+    getUser()
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        setSpotifyUser({ id: data.id, email: data.email, display_name: data.display_name });
+      })
+      .catch(err => console.error('Error loading Spotify user:', err));
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, spotifyUser]);
+
+const checkSubscription = useCallback(async () => {
     if (!spotifyUser || !spotifyUser.id) return;
     try {
       const response = await fetch(`/api/subscription-status?spotify_user_id=${spotifyUser.id}`);

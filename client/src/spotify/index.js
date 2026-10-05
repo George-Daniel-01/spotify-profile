@@ -137,6 +137,7 @@ export const logout = () => {
   window.localStorage.removeItem('spotify_token_timestamp');
   window.localStorage.removeItem('spotify_access_token');
   window.localStorage.removeItem('spotify_refresh_token');
+  inflightUser = null;
   window.location.reload();
 };
 
@@ -150,7 +151,20 @@ const getHeaders = () => {
   };
 };
 
-export const getUser = () => axios.get('https://api.spotify.com/v1/me', { headers: getHeaders() });
+// Memoised so the profile route and the subscription check can both ask for the
+// current user without issuing two identical requests.
+let inflightUser = null;
+export const getUser = () => {
+  if (!inflightUser) {
+    inflightUser = axios
+      .get('https://api.spotify.com/v1/me', { headers: getHeaders() })
+      .catch(err => {
+        inflightUser = null; // allow a retry after a failure
+        throw err;
+      });
+  }
+  return inflightUser;
+};
 
 export const getFollowing = () =>
   axios.get('https://api.spotify.com/v1/me/following?type=artist', { headers: getHeaders() });

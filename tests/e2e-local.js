@@ -32,9 +32,12 @@ const ROUTES = [
 // '/' = me + following + playlists + top artists + top tracks.
 // '/taste' = TasteProfile(long artists+tracks) + ListeningHabits(short,medium,long artists).
 // '/mood'  = 3 top-track time ranges + 1 batched artist lookup.
+// Every route costs one extra /v1/me now that App resolves the user itself, so
+// the subscription check works on deep links. '/' shares User.js's in-flight
+// request, so it does not pay the extra call.
 const BUDGET = {
-  '/': 5, '/artists': 1, '/tracks': 1, '/recent': 1, '/playlists': 1,
-  '/taste': 5, '/mood': 4, [`/playlists/${PLAYLIST_ID}`]: 2, '/artist/artist0': 1, '/track/track0': 3,
+  '/': 5, '/artists': 2, '/tracks': 2, '/recent': 2, '/playlists': 2,
+  '/taste': 6, '/mood': 5, [`/playlists/${PLAYLIST_ID}`]: 3, '/artist/artist0': 2, '/track/track0': 4,
 };
 
 let pass = 0;
@@ -198,6 +201,97 @@ async function main() {
     }
     await page.close();
     await context.close();
+  }
+
+  // ---------- 4. paywall gating ----------
+  console.log('\n# paywall gating');
+  {
+    const PLANS = [
+      {
+        id: 'prod_1',
+        name: 'Premium',
+        prices: [
+          {
+            id: 'price_1',
+            active: true,
+            currency: 'usd',
+            unit_amount: 500,
+            interval: 'month',
+          },
+        ],
+      },
+    ];
+
+    async function contextFor(subscribed) {
+      const ctx = await browser.newContext({ viewport: { width: 1400, height: 1000 } });
+      await attachSpotifyRoutes(ctx);
+      await ctx.route('**/api/subscription-status*', r =>
+        r.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ subscribed, active: subscribed }),
+        }));
+      await ctx.route('**/api/products', r =>
+        r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(PLANS) }));
+      return ctx;
+    }
+
+    // 4a. unsubscribed -> paywall on the premium pages, and it opens the modal
+    {
+      const ctx = await contextFor(false);
+      const { page } = await newPage(ctx, true);
+
+      await page.goto(BASE + '/artist/artist0', { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(2000);
+      let text = await page.evaluate(() => document.getElementById('root').innerText.trim());
+      if (/premium required/i.test(text) && /see plans/i.test(text))
+        ok('unsubscribed artist shows paywall');
+      else bad('unsubscribed artist shows paywall', JSON.stringify(text.slice(-120)));
+      if (!/FOLLOWERS/.test(text)) ok('unsubscribed artist hides stats');
+      else bad('unsubscribed artist hides stats', 'stats still visible');
+
+      await page.goto(BASE + '/track/track0', { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(2000);
+      text = await page.evaluate(() => document.getElementById('root').innerText.trim());
+      if (/premium required/i.test(text)) ok('unsubscribed track shows paywall');
+      else bad('unsubscribed track shows paywall', JSON.stringify(text.slice(-120)));
+      if (/tempo/i.test(text)) bad('unsubscribed track hides audio analysis', 'analysis visible');
+      else ok('unsubscribed track hides audio analysis');
+
+      // the paywall button must actually open the subscribe modal
+      await page.locator('button:has-text("See plans")').first().click();
+      await page.waitForTimeout(800);
+      const modal = await page.evaluate(() => document.body.innerText);
+      if (/premium required/i.test(modal) && /subscribe for/i.test(modal))
+        ok('paywall button opens subscribe modal with plans');
+      else bad('paywall button opens subscribe modal with plans', JSON.stringify(modal.slice(-160)));
+
+      await page.close();
+      await ctx.close();
+    }
+
+    // 4b. subscribed -> insights, no paywall
+    {
+      const ctx = await contextFor(true);
+      const { page } = await newPage(ctx, true);
+
+      await page.goto(BASE + '/artist/artist0', { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(2000);
+      let text = await page.evaluate(() => document.getElementById('root').innerText.trim());
+      if (/FOLLOWERS/i.test(text) && !/premium required/i.test(text))
+        ok('subscribed artist shows stats, no paywall');
+      else bad('subscribed artist shows stats, no paywall', JSON.stringify(text.slice(-120)));
+
+      await page.goto(BASE + '/track/track0', { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(2500);
+      text = await page.evaluate(() => document.getElementById('root').innerText.trim());
+      if (/tempo/i.test(text) && !/premium required/i.test(text))
+        ok('subscribed track shows audio analysis, no paywall');
+      else bad('subscribed track shows audio analysis, no paywall', JSON.stringify(text.slice(-160)));
+
+      await page.close();
+      await ctx.close();
+    }
   }
 
   console.log('\n================ ' + pass + ' passed, ' + fail + ' failed ================');

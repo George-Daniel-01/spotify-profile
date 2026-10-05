@@ -199,7 +199,7 @@ const Track = props => {
             </Info>
           </TrackContainer>
 
-          {audioFeatures && audioAnalysis && (
+          {isSubscribed && audioFeatures && audioAnalysis && (
             <AudioFeatures>
               <Features>
                 <Feature>
@@ -253,6 +253,18 @@ const Track = props => {
                 Full Description of Audio Features
               </DescriptionLink>
             </AudioFeatures>
+          )}
+
+          {!isSubscribed && (
+            <PaywallOverlay>
+              <PaywallTitle>Premium required</PaywallTitle>
+              <PaywallText>
+                Subscribe to unlock audio analysis and feature breakdowns for every track.
+              </PaywallText>
+              <PaywallButton type="button" onClick={openSubscribeModal}>
+                See plans
+              </PaywallButton>
+            </PaywallOverlay>
           )}
         </Main>
       ) : (

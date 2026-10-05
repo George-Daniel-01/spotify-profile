@@ -113,28 +113,40 @@ const Artist = props => {
           </Artwork>
           <div>
             <ArtistName>{artist.name}</ArtistName>
-            <Stats>
-              <Stat>
-                <Number>{formatWithCommas((artist.followers || {}).total || 0)}</Number>
-                <NumLabel>Followers</NumLabel>
-              </Stat>
-              {artist.genres && (
+            {isSubscribed ? (
+              <Stats>
                 <Stat>
-                  <Number>
-                    {artist.genres.map(genre => (
-                      <Genre key={genre}>{genre}</Genre>
-                    ))}
-                  </Number>
-                  <NumLabel>Genres</NumLabel>
+                  <Number>{formatWithCommas((artist.followers || {}).total || 0)}</Number>
+                  <NumLabel>Followers</NumLabel>
                 </Stat>
-              )}
-              {artist.popularity && (
-                <Stat>
-                  <Number>{artist.popularity}%</Number>
-                  <NumLabel>Popularity</NumLabel>
-                </Stat>
-              )}
-            </Stats>
+                {artist.genres && (
+                  <Stat>
+                    <Number>
+                      {artist.genres.map(genre => (
+                        <Genre key={genre}>{genre}</Genre>
+                      ))}
+                    </Number>
+                    <NumLabel>Genres</NumLabel>
+                  </Stat>
+                )}
+                {artist.popularity && (
+                  <Stat>
+                    <Number>{artist.popularity}%</Number>
+                    <NumLabel>Popularity</NumLabel>
+                  </Stat>
+                )}
+              </Stats>
+            ) : (
+              <PaywallOverlay>
+                <PaywallTitle>Premium required</PaywallTitle>
+                <PaywallText>
+                  Subscribe to unlock detailed audience stats and genre insights for every artist.
+                </PaywallText>
+                <PaywallButton type="button" onClick={openSubscribeModal}>
+                  See plans
+                </PaywallButton>
+              </PaywallOverlay>
+            )}
           </div>
         </ArtistContainer>
       ) : (
