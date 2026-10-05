@@ -2,14 +2,21 @@ const https = require('https');
 const querystring = require('querystring');
 
 module.exports = async (req, res) => {
-  const { refresh_token } = req.query;
+  // POST only: the refresh token arrives in a request body so it never lands in
+  // access logs, browser history or Referer headers the way a query param did.
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return res.status(405).json({ error: 'Use POST with a JSON body' });
+  }
 
-  if (!refresh_token) {
+  const refreshTokenParam = (req.body && req.body.refresh_token) || '';
+
+  if (!refreshTokenParam) {
     return res.status(400).json({ error: 'Missing refresh_token' });
   }
 
   try {
-    const data = await refreshToken(refresh_token);
+    const data = await refreshToken(refreshTokenParam);
     res.json({ access_token: data.access_token });
   } catch (err) {
     res.status(500).json({ error: 'Failed to refresh token' });

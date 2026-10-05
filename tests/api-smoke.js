@@ -101,6 +101,15 @@ async function call(modPath, req) {
     check('unsigned POST -> 400', res.statusCode === 400, 'got ' + res.statusCode + ' body=' + JSON.stringify(res.body));
   }
 
+  console.log('\n# api/refresh_token');
+  {
+    let res = await call('../api/refresh_token.js', mockReq({ method: 'GET', query: { refresh_token: 'secret' } }));
+    check('GET rejected so tokens stay out of URLs', res.statusCode === 405, 'got ' + res.statusCode);
+
+    res = await call('../api/refresh_token.js', mockReq({ method: 'POST', body: {} }));
+    check('missing token -> 400', res.statusCode === 400, 'got ' + res.statusCode);
+  }
+
   console.log('\n# method guards on existing handlers');
   {
     const res = await call('../api/products.js', mockReq({ method: 'POST' }));

@@ -50,7 +50,9 @@ axios.interceptors.response.use(
         return Promise.reject(error);
       }
       try {
-        const { data } = await axios.get(`/api/refresh_token?refresh_token=${refreshToken}`);
+const { data } = await axios.post('/api/refresh_token', {
+          refresh_token: refreshToken,
+        });
         const newToken = data.access_token;
         setLocalAccessToken(newToken);
         processQueue(null, newToken);
@@ -76,7 +78,9 @@ const refreshAccessToken = async () => {
   const refreshToken = getLocalRefreshToken();
   if (!refreshToken) return;
   try {
-    const { data } = await axios.get(`/api/refresh_token?refresh_token=${refreshToken}`);
+    const { data } = await axios.post('/api/refresh_token', {
+      refresh_token: refreshToken,
+    });
     setLocalAccessToken(data.access_token);
   } catch (e) {
     console.error('Token refresh failed:', e);
@@ -108,7 +112,18 @@ export const getAccessToken = () => {
     }
     setTokenTimestamp();
 
-    window.history.replaceState({}, document.title, window.location.pathname);
+    // Strip only the auth params. Replacing the whole URL would also discard
+    // unrelated state the app still needs (e.g. ?checkout=success).
+    const cleaned = new URL(window.location.href);
+    cleaned.hash = '';
+    cleaned.searchParams.delete('access_token');
+    cleaned.searchParams.delete('refresh_token');
+    const query = cleaned.searchParams.toString();
+    window.history.replaceState(
+      {},
+      document.title,
+      cleaned.pathname + (query ? `?${query}` : ''),
+    );
   }
 
   if (Date.now() - getTokenTimestamp() > EXPIRATION_TIME) {

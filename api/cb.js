@@ -22,9 +22,11 @@ module.exports = async (req, res) => {
 
   try {
     const tokenData = await exchangeCode(code, frontendUri);
+    // Deliver the tokens in the URL fragment: it is never sent to the server, so
+    // it stays out of access logs, proxy logs and Referer headers.
     res.redirect(
       302,
-      `${frontendUri}/?${querystring.stringify({
+      `${frontendUri}/#${querystring.stringify({
         access_token: tokenData.access_token,
         refresh_token: tokenData.refresh_token,
       })}`,

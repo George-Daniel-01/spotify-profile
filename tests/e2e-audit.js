@@ -82,7 +82,7 @@ const PAGES = [
   ['/playlists', 'Playlists'],
   ['/taste', 'Taste Profile'],
   ['/mood', 'Mood Match'],
-  ['/playlist/37i9dQZF1DXcBWIGoYBM5M', 'Playlist detail'],
+  ['/playlists/37i9dQZF1DXcBWIGoYBM5M', 'Playlist detail'],
   ['/artist/artist0', 'Artist detail'],
   ['/track/track0', 'Track detail'],
 ];
@@ -295,7 +295,9 @@ async function run(label, opts) {
   fs.mkdirSync(OUT, { recursive: true });
 
   const suites = [
-    ['anonymous', { subscribed: false, products: false, checkoutWorks: false }, false],
+    // This suite still injects Spotify tokens; it represents a logged-in but
+// unsubscribed visitor, not an anonymous one.
+['unsubscribed', { subscribed: false, products: false, checkoutWorks: false }, false],
     ['subscribed', { subscribed: true, products: true, checkoutWorks: true }, false],
   ];
 
