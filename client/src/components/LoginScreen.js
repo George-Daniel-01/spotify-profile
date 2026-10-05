@@ -69,6 +69,13 @@ const LoginButton = styled.a`
     transform: scale(1.05);
   }
 `;
+const LoginHint = styled.p`
+  font-size: ${fontSizes.xs};
+  color: ${colors.lightGrey};
+  margin: 0 auto 40px;
+  max-width: 420px;
+  line-height: 1.6;
+`;
 const Features = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -106,6 +113,11 @@ const LoginScreen = () => (
     <Title>Spotify Profile</Title>
     <Subtitle>Visualize your listening habits and discover your music personality</Subtitle>
     <LoginButton href={LOGIN_URI}>Log in to Spotify</LoginButton>
+    <LoginHint>
+      You need a Spotify account. If you signed up with Google or Facebook but never
+      finished creating one, create it there first&mdash;otherwise those buttons will
+      report that the account isn&rsquo;t connected.
+    </LoginHint>
     <Features>
       <Feature>
         <FeatureTitle>Your Music DNA</FeatureTitle>

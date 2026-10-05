@@ -8,9 +8,12 @@ module.exports = (req, res) => {
 
   const frontendUri = `https://${req.headers.host}`;
 
+  // Long enough to survive a detour through Spotify's account chooser: picking
+  // "Continue with Google" for an unlinked account dead-ends on a sign-up page,
+  // and a 10 minute window expired before the user could retry.
   res.setHeader(
     'Set-Cookie',
-    `spotify_auth_state=${state}; Path=/; HttpOnly; SameSite=Lax; Max-Age=600`,
+    `spotify_auth_state=${state}; Path=/; HttpOnly; SameSite=Lax; Max-Age=3600`,
   );
 
   res.redirect(
