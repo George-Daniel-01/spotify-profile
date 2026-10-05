@@ -132,6 +132,9 @@ const PaywallButton = styled.button`
   font-size: ${fontSizes.base};
 `;
 
+// Spotify omits whole analysis arrays for some tracks, so never assume one exists.
+const countOf = list => (Array.isArray(list) ? list.length : 0);
+
 const Track = props => {
   const { isSubscribed, openSubscribeModal } = props;
   const { trackId } = useParams();
@@ -227,19 +230,19 @@ const Track = props => {
                   <FeatureLabel>Popularity</FeatureLabel>
                 </Feature>
                 <Feature>
-                  <FeatureText>{audioAnalysis.bars.length}</FeatureText>
+                  <FeatureText>{countOf(audioAnalysis.bars)}</FeatureText>
                   <FeatureLabel>Bars</FeatureLabel>
                 </Feature>
                 <Feature>
-                  <FeatureText>{audioAnalysis.beats.length}</FeatureText>
+                  <FeatureText>{countOf(audioAnalysis.beats)}</FeatureText>
                   <FeatureLabel>Beats</FeatureLabel>
                 </Feature>
                 <Feature>
-                  <FeatureText>{audioAnalysis.sections.length}</FeatureText>
+                  <FeatureText>{countOf(audioAnalysis.sections)}</FeatureText>
                   <FeatureLabel>Sections</FeatureLabel>
                 </Feature>
                 <Feature>
-                  <FeatureText>{audioAnalysis.segments.length}</FeatureText>
+                  <FeatureText>{countOf(audioAnalysis.segments)}</FeatureText>
                   <FeatureLabel>Segments</FeatureLabel>
                 </Feature>
               </Features>

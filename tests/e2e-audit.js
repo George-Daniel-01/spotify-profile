@@ -158,6 +158,7 @@ async function installMocks(context, opts) {
         beats: [{ start: 0, duration: 0.5, confidence: 1 }],
         tat: [{ start: 0, duration: 0.5, confidence: 1 }],
         sections: [{ start: 0, duration: 210, confidence: 1, loudness: -8, tempo: 110, key: 4, mode: 1, time_signature: 4 }],
+        segments: Array.from({ length: 420 }, (_, i) => ({ start: i * 0.5, duration: 0.5, confidence: 1 })),
         meta: { analyzed_time: { duration: 210, samples: 1000 } },
         track: { tempo: 110, key: 4, mode: 1, time_signature: 4 },
       });
